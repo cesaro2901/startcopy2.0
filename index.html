@@ -4,10 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StartCopy Inventario</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .login-container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; max-width: 300px; margin: auto; }
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
-  <h1>StartCopy Inventario</h1>
-  <button onclick="login()">🔐 Iniciar Sesión</button>
+  <div id="loginContainer" class="login-container">
+    <h2>StartCopy Inventario</h2>
+    <select id="userRole">
+      <option value="">Seleccionar rol...</option>
+      <option value="jefe">Jefe</option>
+      <option value="administrador">Administrador</option>
+    </select>
+    <input type="password" id="userPassword" placeholder="Contraseña">
+    <button onclick="login()">🔐 Iniciar Sesión</button>
+  </div>
+
+  <div id="app" class="hidden">
+    <h1>Sistema Inventario</h1>
+    <button onclick="logout()">🚪 Cerrar Sesión</button>
+    <button onclick="generateInvoice()">🧾 Generar Factura</button>
+    <div id="inventory"></div>
+  </div>
 
   <script>
     let inventory = {};
@@ -17,19 +37,64 @@
     const AUTH_KEY = 'startcopy_auth';
 
     function login() {
-      console.log('🔐 Intentando login...');
-      alert('Login simulado: función disponible ✅');
+      const role = document.getElementById('userRole').value;
+      const password = document.getElementById('userPassword').value;
+      if (!role || !password) {
+        alert('⚠️ Debes seleccionar rol y contraseña');
+        return;
+      }
+      const authData = JSON.parse(localStorage.getItem(AUTH_KEY) || '{}');
+      if (!authData[role] || authData[role] !== password) {
+        alert('❌ Contraseña incorrecta o rol no configurado');
+        return;
+      }
+      currentUser = role;
+      userRole = role;
+      document.getElementById('loginContainer').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+    }
+
+    function logout() {
+      currentUser = null;
+      userRole = null;
+      document.getElementById('loginContainer').classList.remove('hidden');
+      document.getElementById('app').classList.add('hidden');
+    }
+
+    function saveToStorage() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
     }
 
     function generateInvoice() {
-      const printWindow = window.open('', '_blank');
+      const clientName = prompt("Nombre del cliente:");
+      const invoiceNumber = prompt("Número de factura:");
+      if (!clientName || !invoiceNumber) {
+        alert("⚠️ Debes ingresar cliente y número de factura");
+        return;
+      }
       let total = 0;
-      let productRows = '';
+      let productRows = "";
+      Object.values(inventory).forEach(product => {
+        const subtotal = product.salePrice * 1;
+        total += subtotal;
+        productRows += `
+          <tr>
+            <td>${product.code}</td>
+            <td>${product.description}</td>
+            <td>1</td>
+            <td>$${product.salePrice.toFixed(2)}</td>
+            <td>$${subtotal.toFixed(2)}</td>
+          </tr>`;
+      });
+      const printWindow = window.open('', '_blank');
       printWindow.document.write(`
         <html>
+          <head><title>Factura ${invoiceNumber}</title></head>
           <body>
             <h1>Factura</h1>
-            <table border="1">
+            <p>Cliente: ${clientName}</p>
+            <p>N° Factura: ${invoiceNumber}</p>
+            <table border="1" cellpadding="5" cellspacing="0">
               <tr><th>Código</th><th>Descripción</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr>
               ${productRows}
               <tr><td colspan="4"><strong>Total</strong></td><td><strong>$${total.toFixed(2)}</strong></td></tr>
