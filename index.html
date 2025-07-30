@@ -447,6 +447,7 @@
             <button onclick="clearAllData()" class="btn-danger">🗑️ Limpiar Todo</button>
             <input type="text" id="searchInput" placeholder="🔍 Buscar producto..." onkeyup="filterProducts()">
             <input type="file" id="importFile" class="file-input" accept=".json" onchange="importData(this)">
+            <button onclick="logout()" class="btn-danger">🚪 Cerrar Sesión</button> <!-- Botón de Cerrar Sesión -->
         </div>
 
         <div class="table-container">
@@ -797,6 +798,17 @@
                 initializeSystem(); // Inicializar el sistema después del login
             } else {
                 loginMessage.textContent = 'Contraseña incorrecta.';
+            }
+        }
+
+        // Función para cerrar sesión
+        function logout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                document.getElementById('mainInventoryContainer').style.display = 'none';
+                document.getElementById('loginContainer').style.display = 'flex';
+                document.getElementById('passwordInput').value = ''; // Limpiar campo de contraseña
+                document.getElementById('loginMessage').textContent = ''; // Limpiar mensaje de login
+                showSaveStatus('🚪 Sesión cerrada', 'error'); // Opcional: mostrar estado de sesión cerrada
             }
         }
 
