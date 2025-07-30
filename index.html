@@ -278,6 +278,7 @@
             padding: 8px;
             border: 1px solid #555;
             border-radius: 4px;
+            font-size: 14px; /* Ajustado para consistencia */
             background-color: #4a4a4a;
             color: #ffffff;
         }
@@ -423,7 +424,7 @@
             <input type="password" id="passwordInput" placeholder="Introduce la contraseña">
             <button onclick="login()">Entrar</button>
             <p id="loginMessage"></p>
-            <button style="margin-top: 15px; background-color: #27ae60;" onclick="openSetPasswordModal()">Establecer Contraseña</button>
+            <button style="margin-top: 15px; background-color: #27ae60;" onclick="openSetPasswordModal()">Establecer/Cambiar Contraseña</button>
         </div>
     </div>
 
@@ -686,14 +687,18 @@
     <div id="setPasswordModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('setPassword')">&times;</span>
-            <h3>Establecer Contraseña</h3>
+            <h3>Establecer/Cambiar Contraseña</h3>
             <form id="setPasswordForm">
+                <div class="form-group" id="currentPasswordGroup" style="display: none;">
+                    <label>Contraseña Actual:</label>
+                    <input type="password" id="currentPassword" placeholder="Introduce tu contraseña actual">
+                </div>
                 <div class="form-group">
                     <label>Nueva Contraseña:</label>
                     <input type="password" id="newPassword" required>
                 </div>
                 <div class="form-group">
-                    <label>Confirmar Contraseña:</label>
+                    <label>Confirmar Nueva Contraseña:</label>
                     <input type="password" id="confirmPassword" required>
                 </div>
                 <div class="modal-buttons">
@@ -716,26 +721,63 @@
 
         // --- Funciones de Login y Contraseña ---
         function openSetPasswordModal() {
+            const storedPassword = localStorage.getItem(PASSWORD_KEY);
+            const currentPasswordGroup = document.getElementById('currentPasswordGroup');
+            const currentPasswordInput = document.getElementById('currentPassword');
+            const newPasswordInput = document.getElementById('newPassword');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+
+            // Limpiar campos al abrir el modal
+            currentPasswordInput.value = '';
+            newPasswordInput.value = '';
+            confirmPasswordInput.value = '';
+
+            // Actualizar el título del modal
+            document.querySelector('#setPasswordModal h3').textContent = storedPassword ? 'Cambiar Contraseña' : 'Establecer Contraseña';
+
+            if (storedPassword) {
+                // Si ya hay una contraseña establecida, mostrar el campo de contraseña actual
+                currentPasswordGroup.style.display = 'block';
+                currentPasswordInput.setAttribute('required', 'true'); // Hacerlo requerido
+            } else {
+                // Si no hay contraseña, ocultar el campo de contraseña actual
+                currentPasswordGroup.style.display = 'none';
+                currentPasswordInput.removeAttribute('required'); // No requerido
+            }
             openModal('setPassword');
         }
 
         document.getElementById('setPasswordForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const storedPassword = localStorage.getItem(PASSWORD_KEY);
+            const currentPassword = document.getElementById('currentPassword').value;
             const newPass = document.getElementById('newPassword').value;
             const confirmPass = document.getElementById('confirmPassword').value;
 
+            // Si ya existe una contraseña, verificar la contraseña actual
+            if (storedPassword) {
+                if (currentPassword === '') {
+                    alert('Por favor, introduce tu contraseña actual.');
+                    return;
+                }
+                if (currentPassword !== storedPassword) {
+                    alert('La contraseña actual es incorrecta.');
+                    return;
+                }
+            }
+
             if (newPass === '') {
-                alert('La contraseña no puede estar vacía.');
+                alert('La nueva contraseña no puede estar vacía.');
                 return;
             }
 
             if (newPass !== confirmPass) {
-                alert('Las contraseñas no coinciden.');
+                alert('Las nuevas contraseñas no coinciden.');
                 return;
             }
 
             localStorage.setItem(PASSWORD_KEY, newPass);
-            alert('Contraseña establecida exitosamente.');
+            alert('Contraseña establecida/cambiada exitosamente.');
             closeModal('setPassword');
         });
 
